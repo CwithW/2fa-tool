@@ -48,20 +48,30 @@ function syncUrl(tokens) {
   }, HISTORY_BURST_MS);
 }
 
+function showCardError(card, title, detail) {
+  card.classList.add("invalid");
+  card.setAttribute("aria-invalid", "true");
+
+  const pin = card.querySelector(".pin");
+  pin.textContent = title;
+  pin.disabled = true;
+
+  const status = card.querySelector(".copy-status");
+  status.textContent = detail;
+  status.classList.add("error");
+  card.querySelector(".timer").hidden = true;
+}
+
 function createCard(entry) {
   const card = cardTemplate.content.firstElementChild.cloneNode(true);
   const label = card.querySelector(".card-label");
   const pin = card.querySelector(".pin");
 
-  label.textContent = entry.token?.label ?? `Token ${entry.index + 1}`;
+  label.textContent = entry.token?.label ?? `Token ${entry.index + 1} · Invalid`;
   pin.addEventListener("click", () => copyCode(card, entry.code));
 
   if (entry.error) {
-    card.classList.add("invalid");
-    pin.textContent = entry.error.message;
-    pin.disabled = true;
-    card.querySelector(".copy-status").textContent = "Check this token and try again";
-    card.querySelector(".timer").hidden = true;
+    showCardError(card, "Invalid token", entry.error.message);
   }
 
   return card;
@@ -126,10 +136,7 @@ async function updateCodes(now = Date.now()) {
         if (version !== renderVersion) {
           return;
         }
-        card.classList.add("invalid");
-        card.querySelector(".pin").textContent = "Unable to generate code";
-        card.querySelector(".pin").disabled = true;
-        card.querySelector(".timer").hidden = true;
+        showCardError(card, "Code error", "This browser could not generate a TOTP code");
       }
     }),
   );
@@ -138,7 +145,6 @@ async function updateCodes(now = Date.now()) {
 function render() {
   const tokens = getInputTokens();
   renderVersion += 1;
-  tokenCount.textContent = `${tokens.length} ${tokens.length === 1 ? "token" : "tokens"}`;
 
   entries = tokens.map((value, index) => {
     try {
@@ -147,6 +153,12 @@ function render() {
       return { index, error, counter: null, code: "" };
     }
   });
+
+  const errorCount = entries.filter((entry) => entry.error).length;
+  const tokenLabel = `${tokens.length} ${tokens.length === 1 ? "token" : "tokens"}`;
+  tokenCount.textContent = errorCount ? `${tokenLabel} · ${errorCount} invalid` : tokenLabel;
+  tokenCount.classList.toggle("has-errors", errorCount > 0);
+  input.setAttribute("aria-invalid", String(errorCount > 0));
 
   codeList.replaceChildren();
 

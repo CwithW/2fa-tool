@@ -36,11 +36,14 @@
           spellcheck="false"
           autocomplete="off"
           autocapitalize="characters"
-          placeholder="JBSWY3DPEHPK3PXP&#10;otpauth://totp/Example:alice@example.com?..."
+          placeholder="JBSW Y3DP EHPK 3PXP&#10;otpauth://totp/Example:alice@example.com?..."
           aria-describedby="input-help security-warning"
         ></textarea>
         <div class="input-footer">
-          <p id="input-help">Base32 secrets and <code>otpauth://totp</code> URLs are supported.</p>
+          <p id="input-help">
+            Minimum 16 Base32 characters. Spaces and hyphens are ignored;
+            <code>otpauth://totp</code> URLs are supported.
+          </p>
           <button id="clear-button" class="text-button" type="button">Clear all</button>
         </div>
       </section>

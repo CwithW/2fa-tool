@@ -136,6 +136,10 @@ h1 span {
   font-size: 0.78rem;
 }
 
+.token-count.has-errors {
+  color: #ff9292;
+}
+
 textarea {
   display: block;
   width: 100%;
@@ -160,6 +164,11 @@ textarea::placeholder {
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgb(186 255 41 / 10%);
+}
+
+textarea[aria-invalid="true"] {
+  border-color: rgb(255 111 111 / 65%);
+  box-shadow: 0 0 0 3px rgb(255 111 111 / 8%);
 }
 
 .input-footer {
@@ -328,6 +337,10 @@ code {
 
 .copy-status.copied {
   color: var(--accent);
+}
+
+.copy-status.error {
+  color: #ff9292;
 }
 
 .timer {

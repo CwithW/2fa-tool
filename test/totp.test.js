@@ -25,6 +25,12 @@ test("matches the RFC 6238 SHA-1 test vector", async () => {
   assert.equal(await generateTotp(token, 59_000), "94287082");
 });
 
+test("supports eight lowercase groups of four Base32 characters", async () => {
+  const token = parseToken("gezd gnbv gy3t qojq gezd gnbv gy3t qojq");
+
+  assert.equal(await generateTotp(token, 59_000), "287082");
+});
+
 test("parses otpauth TOTP settings", () => {
   const token = parseToken(
     "otpauth://totp/Example:alice%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA256&digits=8&period=45",
@@ -48,4 +54,16 @@ test("parses otpauth TOTP settings", () => {
 
 test("rejects invalid Base32", () => {
   assert.throws(() => parseToken("invalid0secret"), /Base32/);
+});
+
+test("rejects short strings that only happen to use Base32 letters", () => {
+  assert.throws(() => parseToken("hello"), /too short/);
+});
+
+test("rejects impossible Base32 lengths", () => {
+  assert.throws(() => parseToken("A".repeat(17)), /invalid Base32 length/);
+});
+
+test("rejects non-zero Base32 padding bits", () => {
+  assert.throws(() => parseToken(`${"A".repeat(17)}B`), /padding bits/);
 });

@@ -4,23 +4,60 @@ const SUPPORTED_ALGORITHMS = new Map([
   ["SHA256", "SHA-256"],
   ["SHA512", "SHA-512"],
 ]);
+const MIN_BASE32_LENGTH = 16;
+const MAX_BASE32_LENGTH = 128;
+const VALID_UNPADDED_REMAINDERS = new Set([0, 2, 4, 5, 7]);
+const REQUIRED_PADDING_BY_REMAINDER = new Map([
+  [0, 0],
+  [2, 6],
+  [4, 4],
+  [5, 3],
+  [7, 1],
+]);
 
 const keyCache = new Map();
 
-export function decodeBase32(input) {
-  const normalized = input
-    .toUpperCase()
-    .replace(/[\s-]/g, "")
-    .replace(/=+$/, "");
+function normalizeBase32(input) {
+  const compact = input.toUpperCase().replace(/[\s-]/g, "");
 
-  if (!normalized) {
+  if (!compact) {
     throw new Error("Secret is empty");
   }
 
-  if ([...normalized].some((character) => !BASE32_ALPHABET.includes(character))) {
-    throw new Error("Secret is not valid Base32");
+  const padding = compact.match(/=+$/)?.[0] ?? "";
+  const normalized = compact.slice(0, compact.length - padding.length);
+
+  if (normalized.includes("=")) {
+    throw new Error("Base32 padding is only allowed at the end");
   }
 
+  if ([...normalized].some((character) => !BASE32_ALPHABET.includes(character))) {
+    throw new Error("Use only Base32 characters A-Z and 2-7");
+  }
+
+  if (normalized.length < MIN_BASE32_LENGTH) {
+    throw new Error(`Secret is too short (minimum ${MIN_BASE32_LENGTH} characters)`);
+  }
+
+  if (normalized.length > MAX_BASE32_LENGTH) {
+    throw new Error(`Secret is too long (maximum ${MAX_BASE32_LENGTH} characters)`);
+  }
+
+  const remainder = normalized.length % 8;
+  if (!VALID_UNPADDED_REMAINDERS.has(remainder)) {
+    throw new Error("Secret has an invalid Base32 length");
+  }
+
+  const requiredPadding = REQUIRED_PADDING_BY_REMAINDER.get(remainder);
+  if (padding && padding.length !== requiredPadding) {
+    throw new Error("Secret has invalid Base32 padding");
+  }
+
+  return normalized;
+}
+
+export function decodeBase32(input) {
+  const normalized = normalizeBase32(input);
   const bytes = [];
   let buffer = 0;
   let bitsInBuffer = 0;
@@ -34,6 +71,10 @@ export function decodeBase32(input) {
       bytes.push((buffer >>> bitsInBuffer) & 0xff);
       buffer &= (1 << bitsInBuffer) - 1;
     }
+  }
+
+  if (buffer !== 0) {
+    throw new Error("Secret has invalid Base32 padding bits");
   }
 
   return new Uint8Array(bytes);
@@ -97,7 +138,7 @@ export function parseToken(value, index = 0) {
 }
 
 async function importKey(secret, algorithm) {
-  const normalizedSecret = secret.toUpperCase().replace(/[\s-]/g, "").replace(/=+$/, "");
+  const normalizedSecret = normalizeBase32(secret);
   const cacheKey = `${algorithm}:${normalizedSecret}`;
 
   if (!keyCache.has(cacheKey)) {

@@ -3,6 +3,10 @@
 A small, dependency-free browser tool that generates live TOTP codes from one or more
 Base32 secrets or `otpauth://totp` URLs.
 
+Raw secrets must contain at least 16 Base32 characters (`A-Z` and `2-7`). Spaces and hyphens are
+ignored, so grouped values such as eight groups of four characters are accepted. Invalid entries
+remain visible as error cards with a specific validation message.
+
 ## Run locally
 
 ```sh
