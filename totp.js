@@ -80,6 +80,14 @@ export function decodeBase32(input) {
   return new Uint8Array(bytes);
 }
 
+export function formatSecretPreview(input) {
+  const compact = input.replace(/[\s=-]/g, "");
+  const visibleCharacters = compact.slice(0, 8);
+  const groupedCharacters = visibleCharacters.match(/.{1,4}/g)?.join(" ") ?? "";
+
+  return `${groupedCharacters}${compact.length > 8 ? "…" : ""}`;
+}
+
 export function parseToken(value, index = 0) {
   const raw = value.trim();
 
@@ -88,6 +96,7 @@ export function parseToken(value, index = 0) {
     return {
       id: `${index}:${raw}`,
       label: `Token ${index + 1}`,
+      detail: formatSecretPreview(raw),
       secret: raw,
       algorithm: "SHA1",
       digits: 6,
@@ -126,10 +135,17 @@ export function parseToken(value, index = 0) {
 
   const pathLabel = decodeURIComponent(url.pathname.replace(/^\//, ""));
   const issuer = url.searchParams.get("issuer")?.trim();
+  const labelSeparator = pathLabel.indexOf(":");
+  const labelIssuer = labelSeparator >= 0 ? pathLabel.slice(0, labelSeparator).trim() : "";
+  const accountName =
+    labelSeparator >= 0 ? pathLabel.slice(labelSeparator + 1).trim() : pathLabel.trim();
+  const site = issuer || labelIssuer;
+  const detail = [site, accountName].filter(Boolean).join(" · ");
 
   return {
     id: `${index}:${raw}`,
-    label: pathLabel || issuer || `Token ${index + 1}`,
+    label: `Token ${index + 1}`,
+    detail,
     secret,
     algorithm,
     digits,

@@ -65,9 +65,12 @@ function showCardError(card, title, detail) {
 function createCard(entry) {
   const card = cardTemplate.content.firstElementChild.cloneNode(true);
   const label = card.querySelector(".card-label");
+  const detail = card.querySelector(".card-detail");
   const pin = card.querySelector(".pin");
 
   label.textContent = entry.token?.label ?? `Token ${entry.index + 1} · Invalid`;
+  detail.textContent = entry.token?.detail ?? "";
+  detail.hidden = !detail.textContent;
   pin.addEventListener("click", () => copyCode(card, entry.code));
 
   if (entry.error) {

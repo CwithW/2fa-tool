@@ -2,7 +2,7 @@ import { webcrypto } from "node:crypto";
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { decodeBase32, generateTotp, parseToken } from "../totp.js";
+import { decodeBase32, formatSecretPreview, generateTotp, parseToken } from "../totp.js";
 
 globalThis.crypto ??= webcrypto;
 
@@ -28,7 +28,14 @@ test("matches the RFC 6238 SHA-1 test vector", async () => {
 test("supports eight lowercase groups of four Base32 characters", async () => {
   const token = parseToken("gezd gnbv gy3t qojq gezd gnbv gy3t qojq");
 
+  assert.equal(token.label, "Token 1");
+  assert.equal(token.detail, "gezd gnbv…");
   assert.equal(await generateTotp(token, 59_000), "287082");
+});
+
+test("formats the first eight non-separator secret characters", () => {
+  assert.equal(formatSecretPreview("i732-n5hk-abcd-efgh"), "i732 n5hk…");
+  assert.equal(formatSecretPreview("i732 n5hk"), "i732 n5hk");
 });
 
 test("parses otpauth TOTP settings", () => {
@@ -39,12 +46,14 @@ test("parses otpauth TOTP settings", () => {
   assert.deepEqual(
     {
       label: token.label,
+      detail: token.detail,
       algorithm: token.algorithm,
       digits: token.digits,
       period: token.period,
     },
     {
-      label: "Example:alice@example.com",
+      label: "Token 1",
+      detail: "Example · alice@example.com",
       algorithm: "SHA256",
       digits: 8,
       period: 45,
