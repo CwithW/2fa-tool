@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>2FA Codes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div class="brand" aria-label="2FA Codes">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>2FA Codes</span>
+        </div>
+        <h1>Your codes,<br /><span>right now.</span></h1>
+        <p class="intro">
+          Paste one Base32 secret per line. Codes are generated locally in this browser.
+        </p>
+      </header>
+
+      <section class="input-panel" aria-labelledby="secret-label">
+        <div class="input-heading">
+          <label id="secret-label" for="token-input">Authenticator secrets</label>
+          <span id="token-count" class="token-count">0 tokens</span>
+        </div>
+        <textarea
+          id="token-input"
+          rows="5"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="JBSWY3DPEHPK3PXP&#10;otpauth://totp/Example:alice@example.com?..."
+          aria-describedby="input-help security-warning"
+        ></textarea>
+        <div class="input-footer">
+          <p id="input-help">Base32 secrets and <code>otpauth://totp</code> URLs are supported.</p>
+          <button id="clear-button" class="text-button" type="button">Clear all</button>
+        </div>
+      </section>
+
+      <aside id="security-warning" class="warning">
+        <span class="warning-icon" aria-hidden="true">!</span>
+        <p>
+          <strong>Secrets are stored in the URL fragment by design.</strong>
+          The fragment is not sent to the web server, but secrets may still appear in browser
+          history, synced tabs, screenshots, browser extensions, and shared links.
+        </p>
+      </aside>
+
+      <section aria-labelledby="codes-heading">
+        <div class="section-heading">
+          <h2 id="codes-heading">Live codes</h2>
+          <p><span class="live-dot" aria-hidden="true"></span>Updates automatically</p>
+        </div>
+        <div id="code-list" class="code-list" aria-live="polite">
+          <div class="empty-state">
+            <div class="empty-icon" aria-hidden="true">•••</div>
+            <p>Your 2FA codes will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>Local-only TOTP · No analytics · No external requests</p>
+      </footer>
+    </main>
+
+    <template id="code-card-template">
+      <article class="code-card">
+        <div class="card-copy">
+          <p class="card-label"></p>
+          <button class="pin" type="button" title="Copy code"></button>
+          <p class="copy-status" aria-live="polite">Click the code to copy</p>
+        </div>
+        <div class="timer" aria-label="Time remaining">
+          <svg viewBox="0 0 44 44" aria-hidden="true">
+            <circle class="timer-track" cx="22" cy="22" r="18"></circle>
+            <circle class="timer-progress" cx="22" cy="22" r="18"></circle>
+          </svg>
+          <span class="seconds"></span>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
